@@ -7,4 +7,4 @@ admin.initializeApp({
   databaseURL: process.env.FIREBASE_DATABASE_URL
 });
 
-exports = admin.database();
+module.exports = admin.database();
