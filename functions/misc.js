@@ -1,4 +1,4 @@
-const { getCountriesQuery } = require('../../src/misc');
+const { getCountriesQuery } = require('../src/misc');
 
 exports.handler = async function (event, context) {
   const queryParams = JSON.parse(event.body);
