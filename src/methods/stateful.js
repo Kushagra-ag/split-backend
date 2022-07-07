@@ -84,9 +84,10 @@ const updateFriendsData = async (ownerId, users, removeUsers = []) => {
     let i = n,
         f, fLocal,
         fErr;
-
+    console.log(users, n);
     while (n--) {
         let j = users[n];
+        console.log('inside while', j, users[n]);
 
         fErr = await database
             .ref(`/users/${j}`)
