@@ -1,6 +1,6 @@
 const { getGeoInfo, checkNewGuestUser } = require("../src/users");
 
-export const handler = async function (event, context) {
+exports.handler = async function (event, context) {
   const queryParams = JSON.parse(event.body);
   let res;
 

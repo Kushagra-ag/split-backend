@@ -1,4 +1,4 @@
-exports = {
+module.exports = {
     country: {
         AF: { name: 'Afghanistan', phoneCode: '+93' },
         AL: { name: 'Albania', phoneCode: '+355' },
