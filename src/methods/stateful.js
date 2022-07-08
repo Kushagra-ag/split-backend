@@ -32,7 +32,7 @@ const addUsersToGroup = async (users, newUsersData = [], grpId) => {
             console.log('contact detected', userId, newUsersData[k]);
 
             !newUsersData[k].flag &&
-                (newUser = await checkNewGuestUser({queryParams: {
+                (newUser = await checkNewGuestUser({passedUser: {
                     name: newUsersData[k].name,
                     contact: newUsersData[k].contact,
                     email: newUsersData[k].email

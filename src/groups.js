@@ -193,7 +193,7 @@ const getGroupDetails = async ({ grpId }) => {
  *  @returns {(object | void)}
  */
 
- const addGroupMembers = async ({ users, uId, newUsersData, grpId }) => {
+const addGroupMembers = async ({ users, uId, newUsersData, grpId }) => {
     if (!users || !uId || !grpId)
         return { error: true, msg: 'Could not complete your request', e: 'Invalid parameters' };
 
@@ -267,9 +267,65 @@ const getGroupDetails = async ({ grpId }) => {
     if (e?.error) return e;
 };
 
+/**
+ *  Method to remove user from a particular group in firebase
+ *
+ *  @param {string} userId - The user's uid
+ *  @param {string} grpId - The group id
+ *  @returns {(object | void)}
+ */
+
+const removeGroupMember = async ({userId, grpId}) => {
+    if (!userId || !grpId) return { error: true, msg: 'Invalid parameters', e: 'Invalid parameters' };
+
+    const e = await database
+        .ref(`/groups/${grpId}`)
+        .once('value')
+        .then(async snap => {
+            if (snap.exists()) {
+                snap = snap.val();
+                const relIdUser = snap.relUserId[userId],
+                    cashFlowArr = JSON.parse(snap.cashFlowArr);
+
+                if (cashFlowArr[relIdUser] != 0) return { error: true, msg: 'The user is not settled up' };
+
+                // cashFlowArr.splice(relIdUser, 1);
+
+                // for(let o in snap.relUserId) {
+                //     if(snap.relUserId[o] > relIdUser) {
+                //         snap.relUserId[o] -= 1;
+                //     }
+                // }
+
+                let updates = {};
+
+                updates[`/groups/${grpId}/relUserId/${userId}`] = null;
+                updates[`/groups/${grpId}/defaultGrp/${userId}`] = null;
+                // updates[`/groups/${grpId}/cashFlowArr`] = JSON.stringify(cashFlowArr);
+                updates[`/groups/${grpId}/members/${userId}`] = null;
+                updates[`/users/${userId}/groups/${grpId}`] = null;
+                updates[`/users/${userId}/defaultGrp/${grpId}`] = null;
+
+                // updates[`/groups/${grpId}/lastActive`] = Date.now();
+                console.log(updates);
+
+                const r = await database
+                    .ref()
+                    .update(updates)
+                    .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+
+                if (r?.error) return r;
+            } else return { error: true, msg: 'Some unexpected error occured', e: `The group ${grpId} doesn't exist` };
+        })
+        .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+
+    return e;
+};
+
 module.exports = {
     createGroup,
     setDeafultGrp,
     getGroupDetails,
-    addGroupMembers
+    addGroupMembers,
+    removeGroupMember
 }

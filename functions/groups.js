@@ -1,4 +1,4 @@
-const { createGroup, setDeafultGrp, getGroupDetails } = require('../src/groups');
+const { createGroup, setDeafultGrp, getGroupDetails, addGroupMembers, removeGroupMember } = require('../src/groups');
 
 exports.handler = async function (event, context) {
   const queryParams = JSON.parse(event.body);
@@ -10,7 +10,7 @@ exports.handler = async function (event, context) {
       case 'setDeafultGrp': res = await setDeafultGrp(queryParams);break;
       case 'getGroupDetails': res = await getGroupDetails(queryParams);break;
       case 'addGroupMembers': res = await addGroupMembers(queryParams);break;
-      case 'addMembersToGroup': res = null;break;
+      case 'removeGroupMember': res = await removeGroupMember(queryParams);break;
       default: null;
   }
 
