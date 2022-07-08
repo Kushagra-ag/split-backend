@@ -1,9 +1,8 @@
 const database = require('../firebase/admin');
+const {nanoid} = require('nanoid');
 const { getUserCurrencyAndCountry } = require('./methods/utils');
 
-const getGeoInfo = ({queryParams, event, context}) => {
-    
-    const {countryCode, currencyCode} = queryParams;
+const getGeoInfo = ({countryCode, currencyCode}) => {
     const geoInfo = getUserCurrencyAndCountry(countryCode, currencyCode);
 
     return geoInfo;
@@ -18,8 +17,7 @@ const getGeoInfo = ({queryParams, event, context}) => {
  *  donee
  */
 
- const checkNewGuestUser = async ({queryParams, event, context}) => {
-     const { passedUser, flag = false } = queryParams;
+ const checkNewGuestUser = async ({passedUser, flag = false}) => {
     if (!passedUser) return { error: true, msg: 'Invalid parameters', e: 'Invalid parameters' };
 
     const key = passedUser.email ? 'email' : 'contact';
@@ -45,7 +43,7 @@ const getGeoInfo = ({queryParams, event, context}) => {
                     photoURL: user[_id].photoURL,
                     email: user[_id].email
                 };
-                return existingUser;
+                return {user: existingUser};
             }
 
             const userId = nanoid();
@@ -60,12 +58,9 @@ const getGeoInfo = ({queryParams, event, context}) => {
                 // photoURL: null,
                 newUser: true
             };
-            return newUser;
+            return {user: newUser};
         })
-        .catch(e => {
-            console.log('errrr', e);
-            return null;
-        });
+        .catch(e => ({ error: true, user: null, msg: 'Please check your internet connection', e }));
 
     return u;
 };

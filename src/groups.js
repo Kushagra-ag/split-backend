@@ -20,10 +20,8 @@ const { splitEqual } = require('./methods/utils');
  */
 
 const createGroup = async ({
-    queryParams, event, context
+    name, ownerId, users = [], newUsersData = [], defaultGrp = false, currency = '₹', status = 'active', noOfExp = 0, netBal = 0
 }) => {
-
-    const {name, ownerId, users = [], newUsersData = [], defaultGrp = false, currency = '₹', status = 'active', noOfExp = 0, netBal = 0} = queryParams;
 
     if (!name || !ownerId) return { error: true, msg: 'Could not complete your request', e: 'Invalid parameters' };
     if(!users.length) return { error: true, msg: 'No users are selected', e: 'Users array empty in createGroup'};
@@ -89,25 +87,25 @@ const createGroup = async ({
     const finalUpdates = { ...updates, ...u, ...fUpdates };console.log('jjjj', fLocal)
 
     // Creating the group
-    // e = await database
-    //     .ref(`/groups/${grpId}`)
-    //     .set(groupConfig)
-    //     .then()
-    //     .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+    e = await database
+        .ref(`/groups/${grpId}`)
+        .set(groupConfig)
+        .then()
+        .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
 
-    // if (e?.error) return e;
+    if (e?.error) return e;
 
     console.log('before sec call- ', finalUpdates, groupConfig);
-    // e = await database
-    //     .ref()
-    //     .update(finalUpdates)
-    //     .then(() => console.log('sec call complete'))
-    //     .catch(e => {
-    //         console.log('errr', e);
-    //         return { error: true, msg: 'Please check your internet connection', e };
-    //     });
+    e = await database
+        .ref()
+        .update(finalUpdates)
+        .then(() => console.log('sec call complete'))
+        .catch(e => {
+            console.log('errr', e);
+            return { error: true, msg: 'Please check your internet connection', e };
+        });
 
-    // if (e?.error) return e;
+    if (e?.error) return e;
 
     return {
         fLocal,
@@ -124,10 +122,7 @@ const createGroup = async ({
  *  @returns {(object | void)}
  */
 
-const setDeafultGrp = async ({queryParams, event, context}) => {
-
-    const { userId, grpId, setDefault = true } = queryParams;
-
+const setDeafultGrp = async ({userId, grpId, setDefault = true}) => {
     if (!userId || !grpId) return { error: true, msg: 'Could not complete your request', e: 'Invalid parameters' };
 
     let u = await database
@@ -168,8 +163,7 @@ const setDeafultGrp = async ({queryParams, event, context}) => {
  *  @returns {(object | void)}
  */
 
-const getGroupDetails = async ({queryParams, event, context}) => {
-    const { grpId } = queryParams;
+const getGroupDetails = async ({ grpId }) => {
     if (!grpId) return { error: true, msg: 'Could not complete your request', e: 'Invalid parameters' };
 
     const group = await database
@@ -189,8 +183,93 @@ const getGroupDetails = async ({queryParams, event, context}) => {
     return group;
 };
 
+/**
+ *  Method to add users in a particular group in firebase, also performs duplicate check
+ *
+ *  @param {array} users - User ids of users to be added to the group
+ *  @param {string} uId - The user's uid
+ *  @param {object} newUsersData - Basic info of new (non-existing) users, if any
+ *  @param {string} grpId - The group id
+ *  @returns {(object | void)}
+ */
+
+ const addGroupMembers = async ({ users, uId, newUsersData, grpId }) => {
+    if (!users || !uId || !grpId)
+        return { error: true, msg: 'Could not complete your request', e: 'Invalid parameters' };
+
+    let n = users.length;
+
+    if (n === 0) return { error: true, msg: 'No users detected', e: 'Users array empty' };
+
+    console.log('in addmembers - methods/groups.js');
+    const e = await database
+        .ref(`/groups/${grpId}`)
+        .once('value')
+        .then(async snap => {
+            if (snap.exists()) {
+                snap = snap.val();
+                const relUserId = snap.relUserId,
+                    existingMembersId = Object.keys(relUserId);
+
+                let cashFlowArr = JSON.parse(snap.cashFlowArr),
+                    i = cashFlowArr.length,
+                    updates = {};
+
+                let { u, updatedUsers, removeUserFriends, err } = await addUsersToGroup(users, newUsersData, grpId);
+                console.log('uuu', updatedUsers);
+                if (err) return err;
+
+                while (n--) {
+                    let userId = updatedUsers[n];
+
+                    // duplicate member check
+                    if (existingMembersId.indexOf(userId) !== -1) {
+                        console.log('duplicate detected', userId);
+                        continue;
+                    }
+
+                    updates[`/groups/${grpId}/relUserId/${userId}`] = i;
+                    // updates[`/groups/${grpId}/members/${userId}`] = true;
+                    updates[`/users/${userId}/groups/${grpId}/relUserId`] = i;
+                    i = i + 1;
+
+                    // update the friend list
+                    let { fUpdates, fErr } = await updateFriendsData(
+                        userId,
+                        Array.from(new Set([uId, ...updatedUsers, ...existingMembersId])),
+                        removeUserFriends
+                    );
+                    console.log('from friend func - ', fUpdates, fErr);
+                    updates = { ...updates, ...u, ...fUpdates };
+                    // console.log(updates);
+                }
+                console.log('af loop', i, cashFlowArr.length);
+                // No user was added
+                if (cashFlowArr.length === i) return;
+
+                cashFlowArr.push(...Array(i - cashFlowArr.length).fill(0));
+
+                updates[`/groups/${grpId}/cashFlowArr`] = JSON.stringify(cashFlowArr);
+                updates[`/groups/${grpId}/lastActive`] = Date.now();
+
+                let res = await database
+                    .ref()
+                    .update(updates)
+                    .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+
+                return res;
+            }
+
+            return { error: true, msg: 'Please check your internet connection', e: `The group ${grpId} doesn't exist` };
+        })
+        .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+
+    if (e?.error) return e;
+};
+
 module.exports = {
     createGroup,
     setDeafultGrp,
-    getGroupDetails
+    getGroupDetails,
+    addGroupMembers
 }

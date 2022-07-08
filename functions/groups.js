@@ -6,9 +6,10 @@ exports.handler = async function (event, context) {
   let res;
 
   switch(queryParams['action']) {
-      case 'createGroup': res = await createGroup({event, context, queryParams});break;
-      case 'setDeafultGrp': res = await setDeafultGrp({queryParams, event, context});break;
-      case 'getGroupDetails': res = await getGroupDetails({queryParams, event, context});break;
+      case 'createGroup': res = await createGroup(queryParams);break;
+      case 'setDeafultGrp': res = await setDeafultGrp(queryParams);break;
+      case 'getGroupDetails': res = await getGroupDetails(queryParams);break;
+      case 'addGroupMembers': res = await addGroupMembers(queryParams);break;
       case 'addMembersToGroup': res = null;break;
       default: null;
   }

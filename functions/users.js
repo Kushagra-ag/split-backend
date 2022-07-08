@@ -5,8 +5,8 @@ exports.handler = async function (event, context) {
   let res;
 
   switch(queryParams['action']) {
-      case 'getGeoInfo': res = await getGeoInfo({event, context, queryParams});break;
-      case 'checkNewGuestUser': res = await checkNewGuestUser({event, context, queryParams});break;
+      case 'getGeoInfo': res = await getGeoInfo(queryParams);break;
+      case 'checkNewGuestUser': res = await checkNewGuestUser(queryParams);break;
       default: null;
   }
 
