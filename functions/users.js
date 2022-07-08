@@ -1,4 +1,4 @@
-import { getGeoInfo } from "../src/users";
+const { getGeoInfo, checkNewGuestUser } = require("../src/users");
 
 export const handler = async function (event, context) {
   const queryParams = JSON.parse(event.body);
@@ -6,7 +6,7 @@ export const handler = async function (event, context) {
 
   switch(queryParams['action']) {
       case 'getGeoInfo': res = await getGeoInfo({event, context, queryParams});break;
-    //   case 'addMembersToGroup': res = null;break;
+      case 'checkNewGuestUser': res = await checkNewGuestUser({event, context, queryParams});break;
       default: null;
   }
 

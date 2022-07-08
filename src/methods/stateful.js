@@ -1,4 +1,5 @@
 const database = require('../../firebase/admin');
+const { checkNewGuestUser } = require('../users');
 
 /**
  *	Method to add new guest users, existing users to group and vice-versa in firebase
@@ -31,11 +32,11 @@ const addUsersToGroup = async (users, newUsersData = [], grpId) => {
             console.log('contact detected', userId, newUsersData[k]);
 
             !newUsersData[k].flag &&
-                (newUser = await checkNewGuestUser({
+                (newUser = await checkNewGuestUser({queryParams: {
                     name: newUsersData[k].name,
                     contact: newUsersData[k].contact,
                     email: newUsersData[k].email
-                }));
+                }}));
             console.log('nn', newUser);
 
             const finalUser = newUser || newUsersData[k];
