@@ -245,7 +245,7 @@ const addGroupMembers = async ({ users, uId, newUsersData, grpId }) => {
                 }
                 console.log('af loop', i, cashFlowArr.length);
                 // No user was added
-                if (cashFlowArr.length === i) return;
+                if (cashFlowArr.length === i) return {error: false, e: 'No unique members found'};
 
                 cashFlowArr.push(...Array(i - cashFlowArr.length).fill(0));
 
@@ -255,6 +255,7 @@ const addGroupMembers = async ({ users, uId, newUsersData, grpId }) => {
                 let res = await database
                     .ref()
                     .update(updates)
+                    .then(() => ({error: false, e: 'No unique members found'}))
                     .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
 
                 return res;
@@ -264,7 +265,7 @@ const addGroupMembers = async ({ users, uId, newUsersData, grpId }) => {
         })
         .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
 
-    if (e?.error) return e;
+    return e;
 };
 
 /**

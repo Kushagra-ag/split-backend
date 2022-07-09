@@ -23,10 +23,12 @@ const getGeoInfo = ({countryCode, currencyCode}) => {
     const key = passedUser.email ? 'email' : 'contact';
     console.log('from checkNewGuestUser', key, passedUser);
 
+    const passedUserVal = passedUser[key].toLowerCase();
+
     const u = await database
         .ref(`users`)
         .orderByChild(key)
-        .equalTo(passedUser[key])
+        .equalTo(passedUserVal)
         .once('value')
         .then(async user => {
             user = user.val();

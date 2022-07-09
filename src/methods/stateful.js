@@ -39,7 +39,7 @@ const addUsersToGroup = async (users, newUsersData = [], grpId) => {
                 }}));
             console.log('nn', newUser);
 
-            const finalUser = newUser.user || newUsersData[k];
+            const finalUser = newUser?.user || newUsersData[k];
             const _id = finalUser._id;
             delete finalUser._id;
 
