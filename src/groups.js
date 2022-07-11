@@ -273,7 +273,7 @@ const addGroupMembers = async ({ users, uId, newUsersData, grpId }) => {
  *
  *  @param {string} userId - The user's uid
  *  @param {string} grpId - The group id
- *  @returns {(object | void)}
+ *  @returns {object}
  */
 
 const removeGroupMember = async ({userId, grpId}) => {
@@ -287,6 +287,8 @@ const removeGroupMember = async ({userId, grpId}) => {
                 snap = snap.val();
                 const relIdUser = snap.relUserId[userId],
                     cashFlowArr = JSON.parse(snap.cashFlowArr);
+
+                if(relIdUser === undefined) return { error: true, msg: 'The user is not part of the group' };
 
                 if (cashFlowArr[relIdUser] != 0) return { error: true, msg: 'The user is not settled up' };
 
@@ -313,9 +315,10 @@ const removeGroupMember = async ({userId, grpId}) => {
                 const r = await database
                     .ref()
                     .update(updates)
+                    .then(() => ({error: false, msg: 'User successfully removed'}))
                     .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
 
-                if (r?.error) return r;
+                return r;
             } else return { error: true, msg: 'Some unexpected error occured', e: `The group ${grpId} doesn't exist` };
         })
         .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
