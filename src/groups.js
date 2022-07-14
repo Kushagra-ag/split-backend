@@ -350,7 +350,7 @@ const removeGroupMember = async ({userId, grpId}) => {
         return { error: false, msg: 'The user is already added to the group', e: 'Already a member', _id: grpId };
     }
 
-    let users = await getUsers(Object.keys(grp.members));
+    let users = await getUsers({users: Object.keys(grp.members)});
     
     if (users?.error) {
         console.log(users);
