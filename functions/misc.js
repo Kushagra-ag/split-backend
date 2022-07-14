@@ -1,4 +1,5 @@
 const { getCountriesQuery } = require('../src/misc');
+const { DEFAULT_ERROR } = require('../src/constants');
 
 exports.handler = async function (event, context) {
   const queryParams = JSON.parse(event.body);
@@ -8,7 +9,7 @@ exports.handler = async function (event, context) {
   switch(queryParams['action']) {
       case 'countrySearchQuery': res = getCountriesQuery({event, context, queryParams});break;
     //   case 'addMembersToGroup': res = null;break;
-      default: null;
+      default: res = DEFAULT_ERROR;
   }
 
   console.log('response', res);

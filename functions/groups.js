@@ -1,4 +1,5 @@
-const { createGroup, setDeafultGrp, getGroupDetails, addGroupMembers, removeGroupMember } = require('../src/groups');
+const GroupMethods = require('../src/groups');
+const { DEFAULT_ERROR } = require('../src/constants');
 
 exports.handler = async function (event, context) {
   const queryParams = JSON.parse(event.body);
@@ -6,12 +7,13 @@ exports.handler = async function (event, context) {
   let res;
 
   switch(queryParams['action']) {
-      case 'createGroup': res = await createGroup(queryParams);break;
-      case 'setDeafultGrp': res = await setDeafultGrp(queryParams);break;
-      case 'getGroupDetails': res = await getGroupDetails(queryParams);break;
-      case 'addGroupMembers': res = await addGroupMembers(queryParams);break;
-      case 'removeGroupMember': res = await removeGroupMember(queryParams);break;
-      default: null;
+      case 'createGroup': res = await GroupMethods.createGroup(queryParams);break;
+      case 'setDeafultGrp': res = await GroupMethods.setDeafultGrp(queryParams);break;
+      case 'getGroupDetails': res = await GroupMethods.getGroupDetails(queryParams);break;
+      case 'addGroupMembers': res = await GroupMethods.addGroupMembers(queryParams);break;
+      case 'removeGroupMember': res = await GroupMethods.removeGroupMember(queryParams);break;
+      case 'joinGroupInfo': res = await GroupMethods.joinGroupInfo(queryParams);break;
+      default: res = DEFAULT_ERROR;
   }
 
   console.log('response', res);

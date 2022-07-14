@@ -326,10 +326,93 @@ const removeGroupMember = async ({userId, grpId}) => {
     return e;
 };
 
+/**
+ *  Method to fetch joining info of a particular group from firebase
+ *
+ *  @param {string} encodedGrpId - The user's uid (base64 encoded)
+ *  @param {string} userId - The user's uid
+ *  @returns {object}
+ */
+
+ const joinGroupInfo = async ({encodedGrpId, userId}) => {
+    if (!encodedGrpId) return { error: true, msg: 'Invalid parameters', e: 'Invalid parameters' };
+
+    const grpId = Buffer.from(encodedGrpId, 'base64').toString('utf8');
+    console.log('decoded id- ', grpId);
+
+    const grp = await getGroupDetails({grpId});
+    if (grp?.error) {
+        return { error: true, msg: 'Invalid link', e };
+    }
+    console.log('dc', grp);
+    if (Object.keys(grp.members).indexOf(userId) !== -1) {
+        return { error: false, msg: 'The user is already added to the group', e: 'Already a member', _id: grpId };
+    }
+    // @todo not yet migrated
+    // let users = await getUsers(Object.keys(grp.members));
+    let users = ["Hx_HQ9weLAlIkCN5rPdXc"]
+    if (users?.error) {
+        console.log(users);
+        return { error: true, msg: 'Please check your internet connection', e };
+    }
+
+    console.log('before cmn friends loop', users);
+
+    return { ...grp, grpMembers: users };
+};
+
+/**
+ *  Method to delete a group from firebase
+ *
+ *  @param {string} grpId - The group id
+ *  @returns {(object | void)}
+ */
+
+ const deleteGroup = async grpId => {
+    if (!grpId) return { error: true, msg: 'Could not complete your request', e: 'Invalid parameters' };
+
+    const e = await database
+        .ref(`/groups/${grpId}`)
+        .once('value')
+        .then(async snap => {
+            if (snap.exists()) {
+                snap = snap.val();
+                let users = Object.keys(snap.members),
+                    updates = {};
+                const defaultUsers = snap.defaultGrp ? Object.keys(snap.defaultGrp) : [];
+
+                // removing the group from all relevant user objects
+                users.forEach(async userId => {
+                    updates[`/users/${userId}/groups/${grpId}`] = null;
+
+                    if (defaultUsers.indexOf(userId) !== -1) {
+                        updates[`/users/${userId}/defaultGrp`] = null;
+                    }
+                });
+
+                // removing the group and expense object itself
+                updates[`/groups/${grpId}`] = null;
+                updates[`/expenses/${grpId}`] = null;
+
+                const e = await database
+                    .ref()
+                    .update(updates)
+                    .then(() => ({error: false, msg: 'Group successfully deleted'}))
+                    .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+
+                return e;
+            }
+        })
+        .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+
+    return e;
+};
+
 module.exports = {
     createGroup,
     setDeafultGrp,
     getGroupDetails,
     addGroupMembers,
-    removeGroupMember
+    removeGroupMember,
+    joinGroupInfo
 }

@@ -1,4 +1,5 @@
 const { getGeoInfo, checkNewGuestUser } = require("../src/users");
+const { DEFAULT_ERROR } = require('../src/constants');
 
 exports.handler = async function (event, context) {
   const queryParams = JSON.parse(event.body);
@@ -7,7 +8,7 @@ exports.handler = async function (event, context) {
   switch(queryParams['action']) {
       case 'getGeoInfo': res = await getGeoInfo(queryParams);break;
       case 'checkNewGuestUser': res = await checkNewGuestUser(queryParams);break;
-      default: null;
+      default: res = DEFAULT_ERROR;
   }
 
   console.log('response', res);
