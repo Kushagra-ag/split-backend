@@ -368,10 +368,10 @@ const removeGroupMember = async ({userId, grpId}) => {
  *  Method to delete a group from firebase
  *
  *  @param {string} grpId - The group id
- *  @returns {(object | void)}
+ *  @returns {object}
  */
 
- const deleteGroup = async grpId => {
+ const deleteGroup = async ({grpId}) => {
     if (!grpId) return { error: true, msg: 'Could not complete your request', e: 'Invalid parameters' };
 
     const e = await database
@@ -417,5 +417,6 @@ module.exports = {
     getGroupDetails,
     addGroupMembers,
     removeGroupMember,
-    joinGroupInfo
+    joinGroupInfo,
+    deleteGroup
 }
