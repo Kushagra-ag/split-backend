@@ -15,7 +15,7 @@ const getGeoInfo = ({countryCode, currencyCode}) => {
  *  @returns {object}
  */
 
- const getUsers = async (users = []) => {
+ const getUsers = async ({users = []}) => {
     let n = users.length,
         userInfo = [];
 
