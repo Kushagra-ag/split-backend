@@ -1,4 +1,4 @@
-const DEFAULT_ERROR = {error: true, e: 'Invalide request'};
+const DEFAULT_ERROR = {error: true, msg: 'Invalid request', };
 
 module.exports = {
     DEFAULT_ERROR

@@ -2,6 +2,7 @@ const database = require('../firebase/admin');
 // const 'react-native-get-random-values';
 // const { Buffer } = require('buffer';
 const {nanoid} = require('nanoid');
+const { getUsers } = require('./users');
 const { addUsersToGroup, updateFriendsData } = require('./methods/stateful');
 const { splitEqual } = require('./methods/utils');
 
@@ -348,13 +349,15 @@ const removeGroupMember = async ({userId, grpId}) => {
     if (Object.keys(grp.members).indexOf(userId) !== -1) {
         return { error: false, msg: 'The user is already added to the group', e: 'Already a member', _id: grpId };
     }
-    // @todo not yet migrated
-    // let users = await getUsers(Object.keys(grp.members));
-    let users = ["Hx_HQ9weLAlIkCN5rPdXc"]
+
+    let users = await getUsers(Object.keys(grp.members));
+    
     if (users?.error) {
         console.log(users);
         return { error: true, msg: 'Please check your internet connection', e };
     }
+
+    users = users.userInfo;
 
     console.log('before cmn friends loop', users);
 

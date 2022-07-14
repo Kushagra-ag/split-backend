@@ -1,4 +1,4 @@
-const { getGeoInfo, checkNewGuestUser } = require("../src/users");
+const UserMethods = require("../src/users");
 const { DEFAULT_ERROR } = require('../src/constants');
 
 exports.handler = async function (event, context) {
@@ -6,8 +6,9 @@ exports.handler = async function (event, context) {
   let res;
 
   switch(queryParams['action']) {
-      case 'getGeoInfo': res = await getGeoInfo(queryParams);break;
-      case 'checkNewGuestUser': res = await checkNewGuestUser(queryParams);break;
+      case 'getUsers': res = await UserMethods.getUsers(queryParams);break;
+      case 'getGeoInfo': res = await UserMethods.getGeoInfo(queryParams);break;
+      case 'checkNewGuestUser': res = await UserMethods.checkNewGuestUser(queryParams);break;
       default: res = DEFAULT_ERROR;
   }
 

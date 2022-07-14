@@ -9,6 +9,39 @@ const getGeoInfo = ({countryCode, currencyCode}) => {
 };
 
 /**
+ *  Method to get details of users in firebase
+ *
+ *  @param {array} users - Array of userIDs
+ *  @returns {object}
+ */
+
+ const getUsers = async (users = []) => {
+    let n = users.length,
+        userInfo = [];
+
+    while (n--) {
+        const userId = users[n];
+
+        const e = await database
+            .ref(`/users/${userId}`)
+            .once('value')
+            .then(snap => {
+                // const { name, photoURL, groups } = snap.val();
+                const user = {
+                    _id: userId,
+                    ...snap.val()
+                };
+                userInfo = [...userInfo, user];
+            })
+            .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+
+        if (e?.error) return e;
+    }
+
+    return {error: false, userInfo};
+};
+
+/**
  *  Method to save custom user to firebase, checks if the user already exists as standard user, sends a guest user object if not
  *
  *  @param {string} contact - Contact of the custom user
@@ -69,5 +102,6 @@ const getGeoInfo = ({countryCode, currencyCode}) => {
 
 module.exports = {
     getGeoInfo,
+    getUsers,
     checkNewGuestUser
 };
