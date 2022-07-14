@@ -21,7 +21,7 @@ const { splitEqual } = require('./methods/utils');
  */
 
 const createGroup = async ({
-    name, ownerId, users = [], newUsersData = [], defaultGrp = false, currency = '₹', status = 'active', noOfExp = 0, netBal = 0
+    name, desc = null, ownerId, users = [], newUsersData = [], defaultGrp = false, currency = '₹', status = 'active', noOfExp = 0, netBal = 0
 }) => {
 
     if (!name || !ownerId) return { error: true, msg: 'Could not complete your request', e: 'Invalid parameters' };
@@ -45,12 +45,13 @@ const createGroup = async ({
     });
 
     // Check default grp collision
-    defaultGrp && (e = await setDeafultGrp(ownerId, grpId));
+    defaultGrp && (e = await setDeafultGrp({userId: ownerId, grpId}));
     if (e?.error) return e;
     console.log('afetr collision check', defaultGrp);
 
     let groupConfig = {
         name,
+        desc,
         ownerId,
         status,
         defaultConfig,

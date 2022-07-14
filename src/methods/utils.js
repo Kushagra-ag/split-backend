@@ -101,15 +101,188 @@ const getUserCurrencyAndCountry = (countryCode, currencyCode) => {
     return geo;
 }
 
+/**
+ *  Method to return the country search results
+ *
+ *  @param {string} query - The query string to match the results
+ *  @returns {array} - The matching country objects
+ */
+
 const getCountriesSearchResult = (query) => {
     const filteredCountries = Object.values(Geo.country).filter(country => country.name.toLowerCase().includes(query.toLowerCase()));
     return filteredCountries;
 }
+
+/**
+ *  Method to return various profile field values checks
+ *
+ *  @returns {object} - Test methods for each user profile field
+ */
+
+export const profileChecks = () => {
+    const userNameCheck = name => {
+        name = name.trim();
+        if (!name) return { error: true, msg: 'Name is empty', e: 'User name field is null' };
+
+        /**
+         * String length should be between 3 and 50 (inclusive)
+         * String should only contain uppercase alphabets, lowercase alphabets and spaces
+         */
+
+        const match = name.match(/^[a-zA-Z\x20]{3,50}$/);
+        if (!match) return { error: true, msg: 'Name format is invalid', e: 'User name field format is invalid' };
+    };
+
+    const userEmailCheck = email => {
+        email = email.trim();
+        if (!email) return { error: true, msg: 'Email is empty', e: 'User email field is null' };
+
+        /**
+         * String should be in valid email format
+         */
+
+        const match = email.match(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/);
+        if (!match) return { error: true, msg: 'Email format is invalid', e: 'User email field format is invalid' };
+    };
+    // @todo
+    const userCountryCheck = country => {};
+
+    return { userNameCheck, userEmailCheck, userCountryCheck };
+};
+
+/**
+ *  Method to return various group field values checks
+ *
+ *  @returns {object} - Test methods for each user group field
+ */
+
+export const groupChecks = () => {
+    const grpNameCheck = name => {
+        name = name.trim();
+        if (!name) return { error: true, msg: 'Name is empty', e: 'User name field is null' };
+
+        /**
+         * String length should be between 1 and 50 (inclusive)
+         * String should only contain uppercase alphabets, lowercase alphabets, numbers, underscore, hyphen, decimal and spaces
+         */
+
+        const match = name.match(/^[a-zA-Z0-9\x20]{1,50}$/);
+        if (!match) return { error: true, msg: 'Name format is invalid', e: 'Group name field format is invalid' };
+    };
+
+    const grpDescCheck = desc => {
+        desc = desc.trim();
+        if (!desc) desc = null;
+
+        /**
+         * String length should be between 0 and 80 (inclusive)
+         * String should only contain uppercase alphabets, lowercase alphabets, numbers, underscore, hyphen, decimal and spaces
+         */
+
+        const match = desc.match(/^[a-zA-Z0-9\x20]{0,80}$/);
+        if (desc && !match)
+            return {
+                error: true,
+                msg: 'Description format is invalid',
+                e: 'Group description field format is invalid'
+            };
+    };
+
+    return { grpNameCheck, grpDescCheck };
+};
+
+// Add expense related methods
+
+/**
+ *  Method to find minimum of 2 numbers
+ *
+ *  @param {number} x - Number 1
+ *  @param {number} y - Number 2
+ *  @returns {number}
+ */
+// not exported
+const minOf2 = (x, y) => {
+    return x < y ? x : y;
+}
+
+/**
+ *  Method that calculates the balance object for a transaction
+ *
+ *  @param {number} bal - The initial balance object
+ *  @param {array} cfa - The exisiting cashFlowArr array
+ *  @returns {void}
+ */
+// not exported
+const finalBal = (bal, cfa) => {
+    let mxCredit = cfa.indexOf(Math.max(...cfa)),
+        mxDebit = cfa.indexOf(Math.min(...cfa));
+
+    if (cfa[mxCredit] == 0 && cfa[mxDebit] == 0) {
+        console.log('settled!');
+        console.log(bal);
+        return;
+    }
+
+    let min = parseFloat(minOf2(-cfa[mxDebit], cfa[mxCredit]).toFixed(2));
+
+    cfa[mxCredit] -= min;
+    cfa[mxDebit] += min;
+
+    cfa[mxCredit] = parseFloat(cfa[mxCredit].toFixed(2));
+    cfa[mxDebit] = parseFloat(cfa[mxDebit].toFixed(2));
+
+    console.log('Person', mxDebit, 'pays', min, ' to Person ', mxCredit);
+
+    bal[mxDebit] ? null : (bal[mxDebit] = {});
+    bal[mxDebit][mxCredit] = min;
+
+    finalBal(bal, cfa);
+};
+
+/**
+ *  Method that calculates the final cashFlowArr after the expense
+ *
+ *  @param {object} tx - The transaction object
+ *  @param {array} cfa - The exisiting cashFlowArr array
+ *  @returns {object} - The updated cashFlowArr, updated group balance object and expense balance object
+ */
+
+const calcNewExpense = (tx, cfa) => {
+    let expenseArr = Array(cfa.length).fill(0);
+
+    cfa.forEach((val, idx) => {
+        if (tx.between[idx]) {
+            cfa[idx] -= parseFloat(tx.between[idx].toFixed(2));
+            expenseArr[idx] -= parseFloat(tx.between[idx].toFixed(2));
+        }
+
+        if (tx.paid_by[idx]) {
+            cfa[idx] += parseFloat(tx.paid_by[idx].toFixed(2));
+            expenseArr[idx] += parseFloat(tx.paid_by[idx].toFixed(2));
+        }
+    });
+
+    let newCashFlowArr = [...cfa];
+
+    let grpBalance, indBalance;
+    finalBal((grpBalance = {}), cfa);
+    finalBal((indBalance = {}), expenseArr);
+
+    newCashFlowArr = newCashFlowArr.map(item => {
+        return parseFloat(item.toFixed(2));
+    });
+
+    console.log('from addTx- ', grpBalance); // Adjacency list
+    return { newCashFlowArr, grpBalance, indBalance };
+};
 
 module.exports = {
     parseQueryParams,
     splitEqual,
     sanitizeObject,
     getUserCurrencyAndCountry,
-    getCountriesSearchResult
+    getCountriesSearchResult,
+    profileChecks,
+    groupChecks,
+    calcNewExpense
 }

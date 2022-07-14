@@ -1,4 +1,4 @@
-const { getCountriesQuery } = require('../src/misc');
+const ExpenseMethods = require('../src/expense');
 const { DEFAULT_ERROR } = require('../src/constants');
 
 exports.handler = async function (event, context) {
@@ -7,7 +7,7 @@ exports.handler = async function (event, context) {
   let res;
 
   switch(queryParams['action']) {
-      case 'countrySearchQuery': res = getCountriesQuery(queryParams);break;
+      case 'addExpense': res = ExpenseMethods.addExpense(queryParams);break;
     //   case 'addMembersToGroup': res = null;break;
       default: res = DEFAULT_ERROR;
   }
