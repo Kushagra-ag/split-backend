@@ -119,7 +119,7 @@ const getCountriesSearchResult = (query) => {
  *  @returns {object} - Test methods for each user profile field
  */
 
-export const profileChecks = () => {
+const profileChecks = () => {
     const userNameCheck = name => {
         name = name.trim();
         if (!name) return { error: true, msg: 'Name is empty', e: 'User name field is null' };
@@ -156,7 +156,7 @@ export const profileChecks = () => {
  *  @returns {object} - Test methods for each user group field
  */
 
-export const groupChecks = () => {
+const groupChecks = () => {
     const grpNameCheck = name => {
         name = name.trim();
         if (!name) return { error: true, msg: 'Name is empty', e: 'User name field is null' };
@@ -166,7 +166,7 @@ export const groupChecks = () => {
          * String should only contain uppercase alphabets, lowercase alphabets, numbers, underscore, hyphen, decimal and spaces
          */
 
-        const match = name.match(/^[a-zA-Z0-9\x20]{1,50}$/);
+        const match = name.match(/^[a-zA-Z0-9-_.\x20]{1,50}$/);
         if (!match) return { error: true, msg: 'Name format is invalid', e: 'Group name field format is invalid' };
     };
 
@@ -179,7 +179,7 @@ export const groupChecks = () => {
          * String should only contain uppercase alphabets, lowercase alphabets, numbers, underscore, hyphen, decimal and spaces
          */
 
-        const match = desc.match(/^[a-zA-Z0-9\x20]{0,80}$/);
+        const match = desc.match(/^[a-zA-Z0-9-_.\x20]{0,80}$/);
         if (desc && !match)
             return {
                 error: true,
@@ -191,7 +191,53 @@ export const groupChecks = () => {
     return { grpNameCheck, grpDescCheck };
 };
 
-// Add expense related methods
+/**
+ *  Method to return various group field values checks
+ *
+ *  @returns {object} - Test methods for each user group field
+ */
+
+ const expenseChecks = () => {
+    const expNameCheck = name => {
+        name = name.trim();
+        if (!name) return { error: true, msg: 'Name is empty', e: 'Expense name field is null' };
+
+        /**
+         * String length should be between 1 and 50 (inclusive)
+         * String should only contain uppercase alphabets, lowercase alphabets, numbers, underscore, hyphen, decimal and spaces
+         */
+
+        const match = name.match(/^[a-zA-Z0-9-_.\x20]{1,50}$/);
+        if (!match) return { error: true, msg: 'Name format is invalid', e: 'Expense name field format is invalid' };
+    };
+
+    const grpDescCheck = desc => {
+        desc = desc.trim();
+        if (!desc) desc = null;
+
+        /**
+         * String length should be between 0 and 80 (inclusive)
+         * String should only contain uppercase alphabets, lowercase alphabets, numbers, underscore, hyphen, decimal and spaces
+         */
+
+        const match = desc.match(/^[a-zA-Z0-9-_.\x20]{0,80}$/);
+        if (desc && !match)
+            return {
+                error: true,
+                msg: 'Description format is invalid',
+                e: 'Group description field format is invalid'
+            };
+    };
+
+    // @todo
+    const expDateCheck = date => {
+
+    }
+
+    return { expNameCheck, grpDescCheck };
+};
+
+// Add expense related utilities
 
 /**
  *  Method to find minimum of 2 numbers
@@ -276,6 +322,17 @@ const calcNewExpense = (tx, cfa) => {
     return { newCashFlowArr, grpBalance, indBalance };
 };
 
+
+const addNullTx = cashFlowArr => {
+    const nullTx = {
+        sum: 0,
+        paid_by: {},
+        between: {}
+    };
+
+    return calcNewExpense(nullTx, cashFlowArr);
+};
+
 module.exports = {
     parseQueryParams,
     splitEqual,
@@ -284,5 +341,6 @@ module.exports = {
     getCountriesSearchResult,
     profileChecks,
     groupChecks,
-    calcNewExpense
+    calcNewExpense,
+    addNullTx
 }

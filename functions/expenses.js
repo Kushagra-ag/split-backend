@@ -1,4 +1,4 @@
-const ExpenseMethods = require('../src/expense');
+const ExpenseMethods = require('../src/expenses');
 const { DEFAULT_ERROR } = require('../src/constants');
 
 exports.handler = async function (event, context) {
@@ -8,8 +8,8 @@ exports.handler = async function (event, context) {
 
   switch(queryParams['action']) {
       case 'addExpense': res = ExpenseMethods.addExpense(queryParams);break;
-    //   case 'addMembersToGroup': res = null;break;
-      default: res = DEFAULT_ERROR;
+      case 'deleteExpense': res = ExpenseMethods.deleteExpense(queryParams);break;
+      default: res = {...DEFAULT_ERROR, method: `/expenses/${queryParams.action}`};
   }
 
   console.log('response', res);

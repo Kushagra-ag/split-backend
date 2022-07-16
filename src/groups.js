@@ -1,10 +1,12 @@
-const database = require('../firebase/admin');
+const admin = require('../firebase/admin');
 // const 'react-native-get-random-values';
 // const { Buffer } = require('buffer';
 const {nanoid} = require('nanoid');
 const { getUsers } = require('./users');
 const { addUsersToGroup, updateFriendsData } = require('./methods/stateful');
 const { splitEqual } = require('./methods/utils');
+
+const database = admin.database();
 
 /**
  *	Method to create a new group and add in firebase - Tasks performed - create group in firebase, check default group collision, update groups and friends attribute of each user
@@ -36,7 +38,7 @@ const createGroup = async ({
     const grpId = nanoid(),
         ts = Date.now(),
         lastActive = ts,
-        inviteLink = `https://unigma.page.link/group/join/${Buffer.from(grpId, 'utf8').toString('base64')}`;
+        inviteLink = `${Buffer.from(grpId, 'utf8').toString('base64')}`;
     
     // configuring default split for each member
     defaults = splitEqual(users.map(u => ({_id: u})), 100);console.log(defaults);
@@ -86,7 +88,7 @@ const createGroup = async ({
     // Update the friends attribute
     let { fUpdates, fLocal, fErr } = await updateFriendsData(ownerId, updatedUsers, removeUserFriends);
 
-    const finalUpdates = { ...updates, ...u, ...fUpdates };console.log('jjjj', fLocal)
+    const finalUpdates = { ...updates, ...u, ...fUpdates };
 
     // Creating the group
     e = await database
@@ -344,7 +346,7 @@ const removeGroupMember = async ({userId, grpId}) => {
 
     const grp = await getGroupDetails({grpId});
     if (grp?.error) {
-        return { error: true, msg: 'Invalid link', e };
+        return { error: true, msg: 'Invalid link', e: 'Invalid link code' };
     }
     console.log('dc', grp);
     if (Object.keys(grp.members).indexOf(userId) !== -1) {

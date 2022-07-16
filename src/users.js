@@ -1,6 +1,8 @@
-const database = require('../firebase/admin');
+const admin = require('../firebase/admin');
 const {nanoid} = require('nanoid');
 const { getUserCurrencyAndCountry } = require('./methods/utils');
+
+const database = admin.database();
 
 const getGeoInfo = ({countryCode, currencyCode}) => {
     const geoInfo = getUserCurrencyAndCountry(countryCode, currencyCode);
