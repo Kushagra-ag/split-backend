@@ -9,7 +9,7 @@ exports.handler = async function (event, context) {
       case 'getUsers': res = await UserMethods.getUsers(queryParams);break;
       case 'getGeoInfo': res = await UserMethods.getGeoInfo(queryParams);break;
       case 'checkNewGuestUser': res = await UserMethods.checkNewGuestUser(queryParams);break;
-      default: res = DEFAULT_ERROR;
+      default: res = {...DEFAULT_ERROR, methodInvoked: `${event.path}/${queryParams.action}`};
   }
 
   console.log('response', res);

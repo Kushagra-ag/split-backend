@@ -14,7 +14,7 @@ exports.handler = async function (event, context) {
       case 'removeGroupMember': res = await GroupMethods.removeGroupMember(queryParams);break;
       case 'joinGroupInfo': res = await GroupMethods.joinGroupInfo(queryParams);break;
       case 'deleteGroup': res = await GroupMethods.deleteGroup(queryParams);break;
-      default: res = DEFAULT_ERROR;
+      default: res = {...DEFAULT_ERROR, methodInvoked: `${event.path}/${queryParams.action}`};
   }
 
   console.log('response', res);

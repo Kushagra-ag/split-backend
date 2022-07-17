@@ -1,5 +1,7 @@
-const database = require('../../firebase/admin');
+const admin = require('../../firebase/admin');
 const { checkNewGuestUser } = require('../users');
+
+const database = admin.database();
 
 /**
  *	Method to add new guest users, existing users to group and vice-versa in firebase
@@ -77,18 +79,18 @@ const addUsersToGroup = async (users, newUsersData = [], grpId) => {
  *  @returns {object} Object of subsequent updates
  */
 
-const updateFriendsData = async (ownerId, users, removeUsers = []) => {
-    // removeItemLocal('userFriends');
+const updateFriendsData = async (ownerId, users, removeUsers = ['V7xHkXGwdZE5PYqoVdehr']) => {
+
     let n = users.length,
         fData = [],
         fUpdates = {};
     let i = n,
-        f, fLocal,
+        f, fLocalNew,
         fErr;
     console.log(users, n);
     while (n--) {
         let j = users[n];
-        console.log('inside while', j, users[n]);
+        // console.log('inside while', j);
 
         fErr = await database
             .ref(`/users/${j}`)
@@ -113,7 +115,7 @@ const updateFriendsData = async (ownerId, users, removeUsers = []) => {
     }
     if (fErr) return { fUpdates: {}, fErr };
 
-    // console.log('fdata ', fData);
+    console.log('fdata ', fData);
     while (i--) {
         let j = users[i],
             k;
@@ -130,44 +132,29 @@ const updateFriendsData = async (ownerId, users, removeUsers = []) => {
                 }
             });
         }
-        // console.log('crt user ', j);
-        // console.log('k user friends', fData[k].friends);
+        console.log('crt user ', j);
+        console.log('k user friends', fData[k].friends);
         f = fData.filter((member, idx) => member._id !== j && fData[k].friends?.indexOf(member._id) === -1);
-        // console.log('unique fraands', f);
+        console.log('unique fraands', f);
 
         if (f.length > 0) {
-            let originalFriends = fData.filter(m => fData[k].friends.indexOf(m._id) !== -1);
-            f = [...originalFriends, ...f];
+            // Array.from(new Set([...fData[k].friends, ...f]))
+            if(j === ownerId) {
+                fLocalNew = f;
+                fLocalNew.forEach(v => delete v.friends);
+            }
+            f = fData[k].friends.concat(f.map(f => f._id));
 
-            // console.log('merged fraands', f);
+            console.log('merged fraands', f);
 
-            // f.forEach(v => delete v.friends);
-
+            f = JSON.stringify(f);
             fUpdates[`/users/${j}/friends`] = f;
         }
     }
 
     console.log('before additional loop ', fUpdates);
 
-    for (let update in fUpdates) {
-        fLocal = fUpdates[update];
-
-        if (update.includes(ownerId)) {
-            fLocal.forEach(v => delete v.friends);
-            // setItemLocal({
-            //     key: 'userFriends',
-            //     value: fr
-            // });
-        }
-
-        let idArr = fLocal.map(u => u._id);
-        idArr = JSON.stringify(idArr);
-        fUpdates[update] = idArr;
-    }
-
-    console.log('are now friends deleted? ', fUpdates, fErr);
-
-    return { fUpdates, fLocal, fErr };
+    return { fUpdates, fLocalNew, fErr };
 };
 
 module.exports = {

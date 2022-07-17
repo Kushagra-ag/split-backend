@@ -197,7 +197,7 @@ const groupChecks = () => {
  *  @returns {object} - Test methods for each user group field
  */
 
- const expenseChecks = () => {
+const expenseChecks = () => {
     const expNameCheck = name => {
         name = name.trim();
         if (!name) return { error: true, msg: 'Name is empty', e: 'Expense name field is null' };
@@ -229,12 +229,15 @@ const groupChecks = () => {
             };
     };
 
-    // @todo
-    const expDateCheck = date => {
-
+    // @to-review
+    const expDateCheck = timestamp => {
+        const newTs = (new Date(timestamp)).getTime();
+        if(newTs <= 0 || isNaN(newTs) || !isFinite(newTs)) {
+            return { error: true, msg: 'Date value format is invalid', e: 'Expense date timestamp is incorrect'};
+        }
     }
 
-    return { expNameCheck, grpDescCheck };
+    return { expNameCheck, grpDescCheck, expDateCheck };
 };
 
 // Add expense related utilities
@@ -341,6 +344,7 @@ module.exports = {
     getCountriesSearchResult,
     profileChecks,
     groupChecks,
+    expenseChecks,
     calcNewExpense,
     addNullTx
 }

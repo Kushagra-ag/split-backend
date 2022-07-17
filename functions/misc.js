@@ -4,17 +4,17 @@ const { DEFAULT_ERROR } = require('../src/constants');
 exports.handler = async function (event, context) {
   const queryParams = JSON.parse(event.body);
   console.log('recd params', queryParams);
-  let res;
+  let response;
 
   switch(queryParams['action']) {
-      case 'countrySearchQuery': res = getCountriesQuery(queryParams);break;
+      case 'countrySearchQuery': response = getCountriesQuery(queryParams);break;
     //   case 'addMembersToGroup': res = null;break;
-      default: res = DEFAULT_ERROR;
+      default: response = {...DEFAULT_ERROR, methodInvoked: `${event.path}/${queryParams.action}`};
   }
 
-  console.log('response', res);
+  console.log('response', response);
   return {
     statusCode: 200,
-    body: JSON.stringify(res),
+    body: JSON.stringify(response),
   };
 }

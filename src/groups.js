@@ -86,7 +86,7 @@ const createGroup = async ({
     });
 
     // Update the friends attribute
-    let { fUpdates, fLocal, fErr } = await updateFriendsData(ownerId, updatedUsers, removeUserFriends);
+    let { fUpdates, fLocalNew, fErr } = await updateFriendsData(ownerId, updatedUsers, removeUserFriends);
 
     const finalUpdates = { ...updates, ...u, ...fUpdates };
 
@@ -112,7 +112,7 @@ const createGroup = async ({
     if (e?.error) return e;
 
     return {
-        fLocal,
+        fLocalNew,
         _id: grpId
     };
 };
