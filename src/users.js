@@ -61,10 +61,10 @@ const getGeoInfo = ({countryCode, currencyCode}) => {
             if (snap.exists()) {
                 // snap = snap.val();
                 // Array of group ids
-                let groups = snap._snapshot.childKeys,
+                let groups = Object.keys(snap.val()),
                     data = [];
                 let n = groups?.length;
-
+                console.log('aaaaaa');
                 if (!n) return [];
 
                 while (n--) {
@@ -90,7 +90,7 @@ const getGeoInfo = ({countryCode, currencyCode}) => {
 
             return [];
         })
-        .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+        .catch(e => ({ error: true, msg: 'Plllease check your internet connection', e }));
 
     return e;
 };
