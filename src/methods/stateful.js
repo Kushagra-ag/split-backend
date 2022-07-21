@@ -157,7 +157,74 @@ const updateFriendsData = async (ownerId, users, removeUsers = ['V7xHkXGwdZE5PYq
     return { fUpdates, fLocalNew, fErr };
 };
 
+/**
+ *  Method to sync the user's friend list locally from the firebase
+ *
+ *  @param {string} uId - The user id of the current user
+ *  @returns
+ */
+
+const syncFriendsLocal = uId => {
+    console.log('in misc');
+
+    let fData = [];
+
+    const e = database
+        .ref(`/users/${uId}/friends`)
+        .once('value')
+        .then(async f => {
+            f = JSON.parse(f.val());
+            console.log(f);
+            if (f && f.length > 0) {
+                let n = f.length;
+
+                while (n--) {
+                    const friend = f[n];
+
+                    await database
+                        .ref(`/users/${friend}`)
+                        .once('value')
+                        .then(u => {
+                            if (u.exists()) {
+                                u = u.val();
+                                const { photoURL, name, contact, email } = u;
+
+                                fData.push({
+                                    photoURL,
+                                    name,
+                                    contact,
+                                    email,
+                                    _id: friend
+                                });
+                            }
+                        })
+                        .catch(e => ({ error: false, e}));
+                }
+
+                console.log('signin fdata ', fData);
+
+                const item = {
+                    key: 'userFriends',
+                    value: fData
+                };
+
+                return { error: false, item };
+                // setItemLocal(item);
+            } else {
+                const item = {
+                    key: 'userFriends',
+                    value: []
+                };
+                return { error: false, item };
+            }
+        })
+        .catch(e => ({ error: false, e}))
+
+    return e;
+};
+
 module.exports = {
     addUsersToGroup,
-    updateFriendsData
+    updateFriendsData,
+    syncFriendsLocal
 }

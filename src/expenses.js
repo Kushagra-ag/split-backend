@@ -34,6 +34,9 @@ const addExpense = async ({
     type = 'standard',
     uId
 }) => {
+    if(!grpId || !amt || !cashFlowArr || !relUserId || !title || !usersPaid || !usersSplit || !uId)
+        return { error: true, msg: 'Could not complete your request', e: 'Invalid parameters' };
+
     cashFlowArr = JSON.parse(cashFlowArr);
     let paidBy = {},
         splitBet = {},

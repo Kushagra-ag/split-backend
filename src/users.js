@@ -1,6 +1,7 @@
 const admin = require('../firebase/admin');
 const {nanoid} = require('nanoid');
 const { getUserCurrencyAndCountry } = require('./methods/utils');
+const { syncFriendsLocal } = require('./methods/stateful');
 
 const database = admin.database();
 
@@ -41,6 +42,57 @@ const getGeoInfo = ({countryCode, currencyCode}) => {
     }
 
     return {error: false, userInfo};
+};
+
+/**
+ *	Method to fetch user groups (sorted by lastActive) from firebase, returns empty array in case of no groups
+ *
+ *	@param {string} userId - Current userId
+ *  @returns {array}
+ */
+
+ const getUserGroups = async ({uId}) => {
+    if (!uId) return { error: true, msg: 'Invalid parameters', e: 'Invalid parameters' };
+
+    const e = await database
+        .ref(`/users/${uId}/groups`)
+        .once('value')
+        .then(async snap => {
+            if (snap.exists()) {
+                // snap = snap.val();
+                // Array of group ids
+                let groups = snap._snapshot.childKeys,
+                    data = [];
+                let n = groups?.length;
+
+                if (!n) return [];
+
+                while (n--) {
+                    let grp = groups[n];
+
+                    let r = await database
+                        .ref(`/groups/${grp}`)
+                        .once('value')
+                        .then(details => {
+                            details = details.val();
+                            details.cashFlowArr = JSON.parse(details.cashFlowArr);
+                            details._id = grp;
+                            data.push(details);
+                        })
+                        .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+
+                    if (r?.error) return r;
+                }
+                // sort data in order of the last active field
+                data.sort((a, b) => b.lastActive - a.lastActive);
+                return data;
+            }
+
+            return [];
+        })
+        .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+
+    return e;
 };
 
 /**
@@ -102,8 +154,15 @@ const getGeoInfo = ({countryCode, currencyCode}) => {
     return u;
 };
 
+const syncUserFriends = async ({ uId }) => {
+    const res = await syncFriendsLocal(uId);
+    return res;
+}
+
 module.exports = {
     getGeoInfo,
     getUsers,
-    checkNewGuestUser
+    getUserGroups,
+    checkNewGuestUser,
+    syncUserFriends
 };
