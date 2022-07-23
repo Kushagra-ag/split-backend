@@ -372,6 +372,7 @@ const removeGroupMember = async ({userId, grpId}) => {
  *
  *  @param {string} grpId - The group id
  *  @returns {object}
+ *  @todo make sure to delete local pinned groups on user's device
  */
 
  const deleteGroup = async ({grpId}) => {

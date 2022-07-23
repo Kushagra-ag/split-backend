@@ -5,6 +5,36 @@ const { calcNewExpense, addNullTx } = require('./methods/utils');
 const database = admin.database();
 
 /**
+ *  Method to get details of a particular expense
+ *
+ *  @param {string} grpId - The group id for the expense
+ *  @param {string} expId - The expense Id
+ *  @returns {object}
+ */
+
+const getExpense = async ({grpId, expId}) => {
+    const res = await database
+        .ref(`/expenses/${grpId}/${expId}`)
+        .once('value')
+        .then(snap => {
+            if (snap.exists()) {
+                let expense = snap.val();
+                expense._id = snap.key;
+                return {error: false, expense};
+            }
+
+            return {
+                error: true,
+                msg: 'Please check your internet connection',
+                e: `The expense ${expId} does not exist`
+            };
+        })
+        .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+
+    return res;
+};
+
+/**
  *  Method to add new expense to firebase
  *
  *  @param {string} date - The timestamp of the expense
@@ -263,6 +293,7 @@ const deleteExpense = async ({grpId, expId, uId}) => {
 };
 
 module.exports = {
+    getExpense,
     addExpense,
     deleteExpense
 }

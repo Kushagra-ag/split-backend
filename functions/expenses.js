@@ -7,6 +7,7 @@ exports.handler = async function (event, context) {
   let res;
 
   switch(queryParams['action']) {
+      case 'getExpense': res = await ExpenseMethods.getExpense(queryParams);break;
       case 'addExpense': res = await ExpenseMethods.addExpense(queryParams);break;
       case 'deleteExpense': res = await ExpenseMethods.deleteExpense(queryParams);break;
       default: res = {...DEFAULT_ERROR, methodInvoked: `${event.path}/${queryParams.action}`};
