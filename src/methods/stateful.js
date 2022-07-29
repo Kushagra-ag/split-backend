@@ -33,12 +33,14 @@ const addUsersToGroup = async (users, newUsersData = [], grpId) => {
             });
             console.log('contact detected', userId, newUsersData[k]);
 
+            const passedUser = {
+                name: newUsersData[k].name,
+                contact: newUsersData[k].contact,
+                email: newUsersData[k].email
+            };
+
             !newUsersData[k].flag &&
-                (newUser = await checkNewGuestUser({passedUser: {
-                    name: newUsersData[k].name,
-                    contact: newUsersData[k].contact,
-                    email: newUsersData[k].email
-                }}));
+                (newUser = await checkNewGuestUser({passedUser}));
             console.log('nn', newUser);
 
             const finalUser = newUser?.user || newUsersData[k];

@@ -1,6 +1,6 @@
 const admin = require('../firebase/admin');
 const {nanoid} = require('nanoid');
-const { getUserCurrencyAndCountry } = require('./methods/utils');
+const { getUserCurrencyAndCountry, profileChecks } = require('./methods/utils');
 const { syncFriendsLocal } = require('./methods/stateful');
 
 const database = admin.database();
@@ -12,7 +12,10 @@ const database = admin.database();
  *	@returns {object}
  */
 
-const signInUserCheck = async ({uId, email}) => {
+const signInUserCheck = async ({user}) => {
+
+    const { uid, email, displayName, photoURL, phoneNumber } = user;
+    const uId = uid;
 
     let e,
         userObj = {};
@@ -47,9 +50,9 @@ const signInUserCheck = async ({uId, email}) => {
 
                     Object.keys(groups).forEach(group => {
                         updates[`/groups/${group}/members/${_id}`] = null;
-                        updates[`/groups/${group}/members/${user.uid}`] = true;
+                        updates[`/groups/${group}/members/${uId}`] = true;
                         updates[`/groups/${group}/relUserId/${_id}`] = null;
-                        updates[`/groups/${group}/relUserId/${user.uid}`] = oldGroups[group].relUserId;
+                        updates[`/groups/${group}/relUserId/${uId}`] = oldGroups[group].relUserId;
                     });
 
                     console.log('key detected', _id, updates);
@@ -63,20 +66,20 @@ const signInUserCheck = async ({uId, email}) => {
 
                 userObj = {
                     ...userObj,
-                    name: user.displayName,
+                    name: displayName,
                     type: 'standard',
                     country: countryCode,
-                    photoURL: user.photoURL,
+                    photoURL: photoURL,
                     lastActive: Date.now(),
                     ts: Date.now()
                 };
             } else {
                 userObj = {
-                    name: user.displayName,
+                    name: displayName,
                     type: 'standard',
-                    email: user.email,
-                    photoURL: user.photoURL,
-                    contact: user.phoneNumber,
+                    email: email,
+                    photoURL: photoURL,
+                    contact: phoneNumber,
                     country: countryCode,
                     lastActive: Date.now(),
                     friends: [],
@@ -185,13 +188,13 @@ const signInUserCheck = async ({uId, email}) => {
 /**
  *  Method to save custom user to firebase, checks if the user already exists as standard user, sends a guest user object if not
  *
- *  @param {string} contact - Contact of the custom user
- *  @param {string} name - Name of the custom user
+ *  @param {string} passedUser - Object of the custom user
+ *  @param {string} flag - Name of the custom user
  *  @return {object} Either the existing firebase user or the newly created guest user
  *  donee
  */
 
- const checkNewGuestUser = async ({passedUser, flag = false}) => {
+const checkNewGuestUser = async ({passedUser, flag = false}) => {
     if (!passedUser) return { error: true, msg: 'Invalid parameters', e: 'Invalid parameters' };
 
     const key = passedUser.email ? 'email' : 'contact';
@@ -247,6 +250,53 @@ const syncUserFriends = async ({ uId }) => {
 };
 
 /**
+ *  Method to update details of users in firebase
+ *
+ *  @param {string} userId - uid of current user
+ *  @param {object} newUser - Object containing updated details of the user
+ *  @param {array} updateFields - The fields that actually need to be updated
+ *  @returns {(object|undefined)}
+ */
+
+const updateUserProfile = async ({userId, newUser, updateFields}) => {
+    if (!userId || !newUser) return { error: true, msg: 'Invalid parameters', e: 'Invalid parameters' };
+
+    if (newUser.email) newUser.email = newUser.email.toLowerCase();
+
+    const fieldTests = profileChecks();
+    let n = updateFields.length,
+        updatedUser = {};
+    while (n--) {
+        let result,
+            field = updateFields[n];
+        switch (field) {
+            case 'name':
+                result = fieldTests.userNameCheck(newUser[field]);
+                break;
+            case 'email':
+                result = fieldTests.userEmailCheck(newUser[field]);
+                break;
+            case 'country':
+                result = fieldTests.userCountryCheck(newUser[field]);
+                break;
+        }
+        console.log('rr', result);
+        if (result?.error) {
+            return result;
+        }
+        updatedUser = { ...updatedUser, [field]: newUser[field] };
+    }
+    console.log('from user methods', updatedUser);
+    const e = await database
+        .ref(`/users/${userId}`)
+        .update(updatedUser)
+        .then(() => ({error: false, msg: 'Successfully updated the profile'}))
+        .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+
+    return e;
+};
+
+/**
  *	Method for generating the currency, country info for user according to their region, defaults to India
  *	@param {string} countryCode - Example - IN
  *  @param {string} currencyCode - Example - INR
@@ -265,5 +315,6 @@ module.exports = {
     getUserGroups,
     checkNewGuestUser,
     syncUserFriends,
+    updateUserProfile,
     getGeoInfo
 };

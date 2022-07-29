@@ -12,6 +12,7 @@ exports.handler = async function (event, context) {
       case 'checkNewGuestUser': res = await UserMethods.checkNewGuestUser(queryParams);break;
       case 'syncUserFriends': res = await UserMethods.syncUserFriends(queryParams);break;
       case 'getUserGroups': res = await UserMethods.getUserGroups(queryParams);break;
+      case 'updateUserProfile': res = await UserMethods.updateUserProfile(queryParams);break;
       default: res = {...DEFAULT_ERROR, methodInvoked: `${event.path}/${queryParams.action}`};
   }
 
