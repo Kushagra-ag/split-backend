@@ -6,6 +6,7 @@ exports.handler = async function (event, context) {
   let res;
 
   switch(queryParams['action']) {
+      case 'signInUserCheck': res = await UserMethods.signInUserCheck(queryParams);break;  
       case 'getUsers': res = await UserMethods.getUsers(queryParams);break;
       case 'getGeoInfo': res = await UserMethods.getGeoInfo(queryParams);break;
       case 'checkNewGuestUser': res = await UserMethods.checkNewGuestUser(queryParams);break;

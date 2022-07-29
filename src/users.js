@@ -5,11 +5,98 @@ const { syncFriendsLocal } = require('./methods/stateful');
 
 const database = admin.database();
 
-const getGeoInfo = ({countryCode, currencyCode}) => {
-    const geoInfo = getUserCurrencyAndCountry(countryCode, currencyCode);
+/**
+ *	Method checks for existing users with same credentials, creates one if no user is found
+ *	@param {array} userId - The uId of the current user
+ *  @param {string} email - The email of the current user
+ *	@returns {object}
+ */
 
-    return geoInfo;
-};
+const signInUserCheck = ({uId, email}) => {
+
+    let e,
+        userObj = {};
+
+    e = await database
+        .ref('/users')
+        .orderByChild('email')
+        .equalTo(email)
+        .once('value')
+        .then(async snap => {
+            if (snap.exists()) {
+                let existingUser = snap.val();
+                const _id = Object.keys(existingUser)[0];
+                existingUser = existingUser[_id];
+                console.log(existingUser, existingUser.type, existingUser.type === 'guest');
+                // guest user check
+                if (existingUser.type === 'guest') {
+                    const { guestTs, email, groups, contact, friends } = existingUser;
+                    userObj = {
+                        contact,
+                        email,
+                        groups,
+                        friends,
+                        guestTs
+                    };
+
+                    // delete existing User and changing user keys in existing groups
+
+                    let updates = {},
+                        oldGroups = existingUser.groups;
+                    updates[`/users/${_id}`] = null;
+
+                    Object.keys(groups).forEach(group => {
+                        updates[`/groups/${group}/members/${_id}`] = null;
+                        updates[`/groups/${group}/members/${user.uid}`] = true;
+                        updates[`/groups/${group}/relUserId/${_id}`] = null;
+                        updates[`/groups/${group}/relUserId/${user.uid}`] = oldGroups[group].relUserId;
+                    });
+
+                    console.log('key detected', _id, updates);
+                    const e = await database
+                        .ref()
+                        .update(updates)
+                        .catch({ error: true, msg: 'Please check your internet connection', e });
+
+                    if (e?.error) return e;
+                }
+
+                userObj = {
+                    ...userObj,
+                    name: user.displayName,
+                    type: 'standard',
+                    country: countryCode,
+                    photoURL: user.photoURL,
+                    lastActive: Date.now(),
+                    ts: Date.now()
+                };
+            } else {
+                userObj = {
+                    name: user.displayName,
+                    type: 'standard',
+                    email: user.email,
+                    photoURL: user.photoURL,
+                    contact: user.phoneNumber,
+                    country: countryCode,
+                    lastActive: Date.now(),
+                    friends: [],
+                    ts: Date.now()
+                };
+            }
+        })
+        .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+
+    if (e?.error) return e;
+
+    e = await database
+        .ref(`/users/${uId}`)
+        .update(userObj)
+        .then(() => ({ error: false, msg: 'User signed in successfully'}))
+        .catch(e => ({ error: true, msg: 'Please check your internet connection', e }));
+
+    return e;
+
+}
 
 /**
  *  Method to get details of users in firebase
@@ -157,12 +244,26 @@ const getGeoInfo = ({countryCode, currencyCode}) => {
 const syncUserFriends = async ({ uId }) => {
     const res = await syncFriendsLocal(uId);
     return res;
-}
+};
+
+/**
+ *	Method for generating the currency, country info for user according to their region, defaults to India
+ *	@param {string} countryCode - Example - IN
+ *  @param {string} currencyCode - Example - INR
+ *	@returns {object}
+ */
+
+ const getGeoInfo = ({countryCode, currencyCode}) => {
+    const geoInfo = getUserCurrencyAndCountry(countryCode, currencyCode);
+
+    return geoInfo;
+};
 
 module.exports = {
-    getGeoInfo,
+    signInUserCheck,
     getUsers,
     getUserGroups,
     checkNewGuestUser,
-    syncUserFriends
+    syncUserFriends,
+    getGeoInfo
 };
