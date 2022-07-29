@@ -12,7 +12,7 @@ const database = admin.database();
  *	@returns {object}
  */
 
-const signInUserCheck = ({uId, email}) => {
+const signInUserCheck = async ({uId, email}) => {
 
     let e,
         userObj = {};
